@@ -1,3 +1,21 @@
-.idea
-.venv
-venv
+# Pastas de configuração de IDEs
+.idea/
+.vscode/
+
+# Ambientes virtuais
+.venv/
+venv/
+
+# Arquivos compilados do Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Arquivos de cache do Django/Flask/etc.
+*.log
+*.sqlite3
+
+# Arquivos do sistema
+.DS_Store
+Thumbs.db
