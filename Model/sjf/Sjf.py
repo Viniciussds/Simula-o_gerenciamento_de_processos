@@ -88,6 +88,7 @@ class SJF:
         table.add_column("Tempo Fim", justify="center", style="green")
         table.add_column("WT", justify="center", style="red")
         table.add_column("TT", justify="center", style="magenta")
+        
 
         for r in resultados:
             table.add_row(
