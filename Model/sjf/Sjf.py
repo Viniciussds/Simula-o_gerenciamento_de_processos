@@ -2,43 +2,28 @@ from rich.console import Console
 from rich.table import Table
 from Model.fila.fila import Fila
 
-
 class SJF:
 
-    def __init__(self, processos=None):
-        """
-        Inicializa o escalonador SJF.
-
-        :param processos: Lista de processos (opcional). Pode ser fornecida na criação da instância.
-        """
+    def __init__(self):
         self.console = Console()
         self.fila_processos = Fila()
-        self.processos = processos if processos is not None else []
 
-    def escalonar(self, processos=None):
-        """
-        Executa o escalonamento SJF.
-
-        :param processos: Lista de processos a escalonar. Se não fornecida, usa a lista da instância.
-        :return: Lista de resultados contendo tempos de execução de cada processo.
-        """
-        if processos is None:
-            processos = self.processos
-
+    def escalonar(self, processos):
         tempo_atual = 0
         resultados = []
         processos_restantes = processos.copy()
 
         while processos_restantes or len(self.fila_processos) > 0:
-            # Adiciona processos que chegaram à fila
-            for p in processos_restantes[:]:
+
+            # Adiciona processos à fila que já chegaram
+            for p in processos_restantes[:]:  # iterando sobre uma cópia
                 if p.get_tempo_chegada() <= tempo_atual:
                     self.fila_processos.push(p)
                     processos_restantes.remove(p)
 
+            # Se a fila estiver vazia, avança para o próximo processo que chegar
             if len(self.fila_processos) == 0:
                 if processos_restantes:
-                    # Nenhum processo disponível, avança para o próximo
                     proximo = min(processos_restantes, key=lambda p: p.get_tempo_chegada())
                     tempo_atual = proximo.get_tempo_chegada()
                     self.fila_processos.push(proximo)
@@ -49,8 +34,10 @@ class SJF:
             # Ordena a fila pelo menor tempo de execução
             self.ordenar_fila_por_tempo_execucao()
 
-            # Executa o processo da frente da fila
+            # Executa o primeiro processo da fila
             processo_atual = self.fila_processos.pop().data
+
+            # Calcula tempos
             inicio = max(tempo_atual, processo_atual.get_tempo_chegada())
             fim = inicio + processo_atual.get_tempo_execucao()
             wt = inicio - processo_atual.get_tempo_chegada()
@@ -86,12 +73,9 @@ class SJF:
             self.fila_processos.push(processo)
 
     def ordenar_por_tempo_execucao(self, processos):
-        """
-        Ordena a lista de processos pelo tempo de execução (menor primeiro) usando bubble sort.
-        """
         tamanho_lista = len(processos)
         for i in range(tamanho_lista):
-            for j in range(i + 1, tamanho_lista):
+            for j in range(i+1, tamanho_lista):
                 if processos[i].get_tempo_execucao() > processos[j].get_tempo_execucao():
                     processos[i], processos[j] = processos[j], processos[i]
         return processos
@@ -107,6 +91,9 @@ class SJF:
         table.add_column("WT", justify="center", style="red")
         table.add_column("TT", justify="center", style="magenta")
 
+        soma_wt = 0
+        soma_tt = 0
+
         for r in resultados:
             table.add_row(
                 str(r["id"]),
@@ -117,5 +104,20 @@ class SJF:
                 str(r["wt"]),
                 str(r["tt"])
             )
+            soma_wt += r["wt"]
+            soma_tt += r["tt"]
+
+        media_wt = soma_wt / len(resultados) if resultados else 0
+        media_tt = soma_tt / len(resultados) if resultados else 0
+
+        table.add_row(
+            "Média",
+            "-",
+            "-",
+            "-",
+            "-",
+            f"{media_wt:.2f}",
+            f"{media_tt:.2f}"
+        )
 
         self.console.print(table)

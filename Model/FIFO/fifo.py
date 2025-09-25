@@ -1,15 +1,15 @@
-from Model.fila.fila import Fila
-from Model.Processo import Processo
 from rich.console import Console
 from rich.table import Table
+from Model.fila.fila import Fila
+from Model.Processo import Processo
 
 class Fifo:
     def __init__(self, processos):
+        self.console = Console()
         self.todos_processos = processos
         self.fila_processos = Fila()
         self.tempo_atual = 0
         self.processos_finalizados = []
-        self.console = Console()
 
     def mostrar_fila(self):
         fila_atual = []
@@ -20,10 +20,16 @@ class Fifo:
         print(f"Fila atual: {fila_atual}")
 
     def escalonar(self):
+        # Resetar processos para "Pronto"
+        for p in self.todos_processos:
+            p.set_estado_processo("Pronto")
+
         print("=== Início da Simulação FIFO ===\n")
-        resultados = []
 
         processos = sorted(self.todos_processos, key=lambda p: p.get_tempo_chegada())
+
+        resultados = []
+
         while len(self.processos_finalizados) < len(processos):
             # Adiciona processos à fila que já chegaram
             for p in processos:
@@ -31,7 +37,6 @@ class Fifo:
                     self.fila_processos.push(p)
                     print(f"Tempo {self.tempo_atual}: Processo {p.get_id()} entrou na fila (Pronto)")
 
-            # Mostrar fila
             self.mostrar_fila()
 
             if self.fila_processos.eVazia():
@@ -55,9 +60,6 @@ class Fifo:
             print(f"Tempo {self.tempo_atual}: Processo {processo.get_id()} finalizado")
             print(f"WT: {wt} | TT: {tt}\n")
 
-            self.processos_finalizados.append(processo)
-
-            # Armazena resultados para tabela
             resultados.append({
                 "id": processo.get_id(),
                 "chegada": processo.get_tempo_chegada(),
@@ -68,8 +70,10 @@ class Fifo:
                 "tt": tt
             })
 
-        print("=== Fim da Simulação ===\n")
+            self.processos_finalizados.append(processo)
+
         self.exibir_resultados(resultados)
+        print("=== Fim da Simulação ===")
 
     def exibir_resultados(self, resultados):
         table = Table(title="📌 Processos Escalonados (FIFO)")
@@ -82,6 +86,9 @@ class Fifo:
         table.add_column("WT", justify="center", style="red")
         table.add_column("TT", justify="center", style="magenta")
 
+        soma_wt = 0
+        soma_tt = 0
+
         for r in resultados:
             table.add_row(
                 str(r["id"]),
@@ -92,5 +99,21 @@ class Fifo:
                 str(r["wt"]),
                 str(r["tt"])
             )
+            soma_wt += r["wt"]
+            soma_tt += r["tt"]
+
+        # Média
+        media_wt = soma_wt / len(resultados) if resultados else 0
+        media_tt = soma_tt / len(resultados) if resultados else 0
+
+        table.add_row(
+            "Média",
+            "-",
+            "-",
+            "-",
+            "-",
+            f"{media_wt:.2f}",
+            f"{media_tt:.2f}"
+        )
 
         self.console.print(table)
