@@ -1,62 +1,64 @@
-from rich.console import Console
-from rich.table import Table
-from Model.fila.fila import Fila 
+from Model.fila.fila import Fila
+from Model.Processo import Processo
 
 class SJF:
-
-    def __init__(self):
-        self.console = Console()
+    def __init__(self, processos):
+        self.todos_processos = processos
         self.fila_processos = Fila()
-         
-    def escalonar(self, processos):
-        tempo_atual = 0
-        resultados = []
-        processos_restantes = processos.copy()
+        self.tempo_atual = 0
+        self.processos_finalizados = []
 
-        while processos_restantes or len(self.fila_processos) > 0:
-            for p in processos_restantes:
-                if p.get_tempo_chegada() <= tempo_atual:
+    def mostrar_fila(self):
+        fila_atual = []
+        no = self.fila_processos.inicio
+        while no:
+            fila_atual.append(no.data.get_id())
+            no = no.get_proximo()
+        print(f"Fila atual: {fila_atual}")
+
+    def escalonar(self):
+        print("=== Início da Simulação SJF ===\n")
+
+        for p in self.todos_processos:
+            p.set_estado_processo("Pronto")
+
+        while len(self.processos_finalizados) < len(self.todos_processos):
+            for p in self.todos_processos:
+                if p.get_tempo_chegada() <= self.tempo_atual and p.get_estado_processo() == "Pronto":
                     self.fila_processos.push(p)
-                    processos_restantes.remove(p)
+                    p.set_estado_processo("NaFila")
+                    print(f"Tempo {self.tempo_atual}: Processo {p.get_id()} entrou na fila (Pronto)")
 
-            if len(self.fila_processos) == 0:
-                if processos_restantes:
-                    # Nenhum processo disponível, avança para o próximo
-                    proximo = min(processos_restantes, key=lambda p: p.get_tempo_chegada())
-                    tempo_atual = proximo.get_tempo_chegada()
-                    self.fila_processos.push(proximo)
-                    processos_restantes.remove(proximo)
-                else:
-                    break
-
-        
+            # Ordena fila pelo menor tempo de execução
             self.ordenar_fila_por_tempo_execucao()
+            
+            # Mostrar fila
+            self.mostrar_fila()
 
-            # Pega o primeiro processo da fila ordenada (menor tempo de execução)
-            processo_atual = self.fila_processos.pop().data
+            if self.fila_processos.eVazia():
+                self.tempo_atual += 1
+                continue
 
-            # Calcula tempos
-            inicio = max(tempo_atual, processo_atual.get_tempo_chegada())
-            fim = inicio + processo_atual.get_tempo_execucao()
-            wt = inicio - processo_atual.get_tempo_chegada()
-            tt = fim - processo_atual.get_tempo_chegada()
-            tempo_atual = fim
+            # Executa próximo processo
+            no = self.fila_processos.pop()
+            processo = no.data
+            processo.set_estado_processo("Executando")
+            print(f"\nTempo {self.tempo_atual}: Processo {processo.get_id()} iniciou execução")
+            self.mostrar_fila()
 
-            # Armazena resultado
-            resultados.append({
-                "id": processo_atual.get_id(),
-                "chegada": processo_atual.get_tempo_chegada(),
-                "execucao": processo_atual.get_tempo_execucao(),
-                "inicio": inicio,
-                "fim": fim,
-                "wt": wt,
-                "tt": tt
-            })
-            print(f"Tempo {inicio}: executando P{processo_atual.get_id()}")
-            print(f"Tempo {fim}: P{processo_atual.get_id()} finalizado (WT={wt}, TT={tt})\n")
+            # Calcula WT e TT
+            tempo_inicio = max(self.tempo_atual, processo.get_tempo_chegada())
+            wt = tempo_inicio - processo.get_tempo_chegada()
+            self.tempo_atual = tempo_inicio + processo.get_tempo_execucao()
+            tt = self.tempo_atual - processo.get_tempo_chegada()
 
-        self.exibir_resultados(resultados)
-        return resultados
+            processo.set_estado_processo("Finalizado")
+            print(f"Tempo {self.tempo_atual}: Processo {processo.get_id()} finalizado")
+            print(f"WT: {wt} | TT: {tt}\n")
+
+            self.processos_finalizados.append(processo)
+
+        print("=== Fim da Simulação ===")
 
     def ordenar_fila_por_tempo_execucao(self):
         if self.fila_processos.eVazia():
@@ -64,41 +66,8 @@ class SJF:
         processos = []
         while len(self.fila_processos) > 0:
             processos.append(self.fila_processos.pop().data)
-            
-        processos_ordenados = self.ordenar_por_tempo_execucao(processos)
-        
-        for processo in processos_ordenados:
-            self.fila_processos.push(processo)
-
-    def ordenar_por_tempo_execucao(self, processos):
-        tamanho_lista = len(processos)
-        for i in range(tamanho_lista):
-            for j in range(i+1, tamanho_lista):
-                if processos[i].get_tempo_execucao() > processos[j].get_tempo_execucao():
-                    processos[i], processos[j] = processos[j], processos[i]
-        return processos
-    
-    def exibir_resultados(self, resultados):
-        table = Table(title="📌 Processos Escalonados (SJF)")
-
-        table.add_column("PID", justify="center", style="cyan", no_wrap=True)
-        table.add_column("Tempo Chegada", justify="center")
-        table.add_column("Tempo Execução", justify="center")
-        table.add_column("Tempo Início", justify="center", style="yellow")
-        table.add_column("Tempo Fim", justify="center", style="green")
-        table.add_column("WT", justify="center", style="red")
-        table.add_column("TT", justify="center", style="magenta")
-        
-
-        for r in resultados:
-            table.add_row(
-                str(r["id"]),
-                str(r["chegada"]),
-                str(r["execucao"]),
-                str(r["inicio"]),
-                str(r["fim"]),
-                str(r["wt"]),
-                str(r["tt"])
-            )
-
-        self.console.print(table)
+        # Ordena pelo menor tempo de execução
+        processos.sort(key=lambda p: p.get_tempo_execucao())
+        # Reinsere na fila
+        for p in processos:
+            self.fila_processos.push(p)
