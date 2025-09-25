@@ -1,7 +1,7 @@
 class Processo:
     def __init__(self, id, tempo_chegada, tempo_execucao):
         self.id = id
-        self.tempo_chegda = tempo_chegada
+        self.tempo_chegada = tempo_chegada
         self.tempo_execucao = tempo_execucao
         self.estado_processo = "Pronto"
 
@@ -15,7 +15,7 @@ class Processo:
         return self.id
 
     def get_tempo_chegada(self):
-        return self.tempo_chegda
+        return self.tempo_chegada
 
     def get_tempo_execucao(self):
         return self.tempo_execucao
@@ -27,4 +27,4 @@ class Processo:
         self.tempo_execucao = tempo_execucao
 
     def set_tempo_chegada(self, tempo_chegada):
-        self.tempo_chegda = tempo_chegada
+        self.tempo_chegada = tempo_chegada
