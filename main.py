@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 import time, threading
-from Model.FIFO.fifo import Fifo
+from Model.fifo.Fifo import Fifo
 from Model.Processo import Processo
 from Model.sjf.Sjf import SJF
 
@@ -18,13 +18,11 @@ class EscalonadorGUI:
         frm = ttk.Frame(self.root, padding=10);
         frm.pack(fill=tk.BOTH, expand=True)
 
-        # Entrada de processos
         ttk.Label(frm, text="Processos (ID, Chegada, Execução):").pack(anchor=tk.W)
         self.campo_processos = tk.Text(frm, height=4)
         self.campo_processos.pack(fill=tk.X, pady=5)
         self.campo_processos.insert(tk.END, "P1,2,15\nP2,4,6\nP3,6,11\nP4,9,8\nP5,11,7")
 
-        # Algoritmo e controles
         alg_frame = ttk.Frame(frm);
         alg_frame.pack(fill=tk.X, pady=5)
         ttk.Label(alg_frame, text="Algoritmo:").pack(side=tk.LEFT)
@@ -35,7 +33,6 @@ class EscalonadorGUI:
         ("Executar", self.iniciar_simulacao), ("Parar", self.parar_simulacao), ("Resultados", self.mostrar_resultados)):
             ttk.Button(alg_frame, text=txt, command=cmd).pack(side=tk.LEFT, padx=5)
 
-        # Tempo e processo executando
         info_frame = ttk.Frame(frm);
         info_frame.pack(fill=tk.X, pady=5)
         self.rot_tempo = ttk.Label(info_frame, text="Tempo: 0");
@@ -43,18 +40,15 @@ class EscalonadorGUI:
         self.rot_exec = ttk.Label(info_frame, text="Executando: Nenhum");
         self.rot_exec.pack(side=tk.LEFT, padx=10)
 
-        # Canvas da fila
         ttk.Label(frm, text="Fila:").pack(anchor=tk.W)
         self.canvas_fila = tk.Canvas(frm, height=60, bg="white");
         self.canvas_fila.pack(fill=tk.X, pady=2)
 
-        # Tabela de estatísticas
         cols = ("ID", "Chegada", "Execução", "Início", "Fim", "WT", "TT")
         self.tbl = ttk.Treeview(frm, columns=cols, show="headings", height=8)
         for c in cols: self.tbl.heading(c, text=c); self.tbl.column(c, width=60)
         self.tbl.pack(fill=tk.BOTH, expand=True, pady=5)
 
-        # Log
         ttk.Label(frm, text="Log:").pack(anchor=tk.W)
         self.log = tk.Text(frm, height=6);
         self.log.pack(fill=tk.X)

@@ -25,13 +25,13 @@ class Fila:
             self.inicio = self.inicio.get_proximo()
             self._tamanho -= 1
             return elemento
-        raise IndexError("Fila está vázia")
+        raise IndexError("Fila está vazia")
 
     def peek(self):
         if self._tamanho > 0:
             elemento = self.inicio
             return elemento
-        raise IndexError("Fila está vázia")
+        raise IndexError("Fila está vazia")
 
     def __len__(self):
         return self._tamanho
